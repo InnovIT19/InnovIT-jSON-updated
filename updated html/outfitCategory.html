@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Your Outfit Category</title>
+    <!-- Add any CSS files or stylesheets here -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            background-size: 1700px 612px;
+        }
+
+        .container {
+            text-align: center;
+            background-image: url('../static/images/about-us-page-heading.jpg');
+            width: 1600px;
+            height: 500px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            color: white; /* Set text color to white */
+        }
+
+        .categories {
+            display: flex;
+            flex-wrap: wrap; /* Enable wrapping for responsive layout */
+            justify-content: space-around; /* Distribute items with space around */
+            gap: 20px; /* Space between items */
+            margin-top: 20px;
+        }
+
+        .category {
+            text-align: center;
+            cursor: pointer;
+            padding: 10px; /* Add padding to each category for spacing */
+            background-color: #000000; /* Light background color */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            transition: transform 0.3s ease; /* Smooth hover effect */
+        }
+
+        .category:hover {
+            transform: scale(1.05); /* Scale up slightly on hover */
+        }
+
+        .category img {
+            width: 150px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 6px; /* Rounded corners for images */
+            margin-bottom: 10px; /* Space below image */
+        }
+
+        .highlight {
+            border: 2px solid blue;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            font-size: 1em;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .success {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .error {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .confirmation {
+            background: #ffc107;
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        #messages {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Select Your Outfit Category</h1>
+        <div id="messages"></div>
+        <div class="categories" id="categories"></div>
+    </div>
+
+    <script>
+        function displayMessage(message, isSuccess) {
+            const messageDiv = document.getElementById('messages');
+            messageDiv.innerHTML = `<p class="${isSuccess ? 'success' : 'error'}">${message}</p>`;
+        }
+
+        function selectCategory(category) {
+            // Remove highlights from all categories
+            document.querySelectorAll('.category').forEach(div => div.classList.remove('highlight'));
+
+            // Highlight the selected category
+            const selectedDiv = document.getElementById(category.id);
+            selectedDiv.classList.add('highlight');
+
+            // Confirm selection with the user
+            const confirmationMessage = `Selected ${category.name} category. Proceed?`;
+            if (confirm(confirmationMessage)) {
+                window.location.href = `/capture_video?category=${category.id}`;
+            } else {
+                displayMessage('Selection cancelled.', false);
+            }
+        }
+
+        function displayCategories(categories) {
+            const categoriesDiv = document.getElementById('categories');
+            categories.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                categoryDiv.id = category.id;
+                categoryDiv.innerHTML = `
+                    <img src="${category.img}" alt="${category.name}">
+                    <p>${category.name}</p>
+                `;
+                categoryDiv.onclick = () => selectCategory(category);
+                categoriesDiv.appendChild(categoryDiv);
+            });
+        }
+
+        function fetchCategories() {
+            fetch('/outfitCategory')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch categories');
+                    }
+                    return response.json();
+                })
+                .then(data => displayCategories(data))
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Start voice recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.onstart = () => console.log('Voice recognition activated.');
+        recognition.onspeechend = () => recognition.stop();
+        recognition.onresult = event => {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            console.log('Voice command:', transcript);
+
+            if (transcript.includes('upper body')) {
+                selectCategory({ id: 'upper-body', name: 'Upper-body' });
+            } else if (transcript.includes('lower body')) {
+                selectCategory({ id: 'lower-body', name: 'Lower-body' });
+            } else if (transcript.includes('full body')) {
+                selectCategory({ id: 'full-body', name: 'Full-body' });
+            } else {
+                displayMessage('Command not recognized. Please say "upper body", "lower body", or "full body".', false);
+            }
+        };
+
+        // Fetch categories on page load
+        window.onload = fetchCategories;
+        recognition.start();
+    </script>
+</body>
+</html>

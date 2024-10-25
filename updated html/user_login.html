@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login</title>
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            background: url('../static/images/02.jpg') no-repeat center center fixed;
+            background-size: 1700px 612px;
+            color: white;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .phone-number-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .digit-box {
+            width: 40px;
+            height: 40px;
+            margin: 0 5px;
+            font-size: 1.5em;
+            text-align: center;
+            border: 1px solid white;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .instructions {
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        .gender-selection {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .gender-option {
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .gender-option input[type="radio"] {
+            display: none;
+        }
+
+        .gender-option label {
+            font-size: 1.2em;
+            color: #ffffff;
+            margin-left: 5px;
+        }
+
+        .gender-option input[type="radio"] + label {
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: background 0.3s ease;
+        }
+
+        .gender-option input[type="radio"]:checked + label {
+            background: #079b93;
+            color: #fff;
+        }
+
+        .button-container {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            background: #1e90ff; /* Light blue color */
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 0 10px;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        button:hover {
+            background: #1c86ee; /* Darker shade of light blue */
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        input[type="radio"] {
+            margin: 0 5px 0 0;
+        }
+
+        label {
+            font-size: 25px;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        input[type="radio"]:checked + label {
+            color: #007bff;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            font-size: 1em;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .success {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .error {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="content">
+    <h1>User Login</h1>
+    {% if user_id %}
+        <p>Your User ID is: <strong>{{ user_id }}</strong></p>
+    {% else %}
+        <p>User ID not found. Please register first.</p>
+    {% endif %}
+    <h1>Enter Your Phone Number</h1>
+    <div class="phone-number-container" id="phone-number-container">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+        <input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">
+    </div>
+    <h1>Select your gender</h1>
+    <div class="gender-selection">
+        <div class="gender-option">
+            <input type="radio" id="female" name="gender" value="female">
+            <label for="female">Female</label>
+        </div>
+        <div class="gender-option">
+            <input type="radio" id="male" name="gender" value="male">
+            <label for="male">Male</label>
+        </div>
+    </div>
+    <div class="instructions">Input your phone number and select your gender to login.</div>
+    <div class="button-container">
+        <button onclick="submitInput()">Next</button>
+    </div>
+    <div class="message success" id="success-message"></div>
+    <div class="message error" id="error-message"></div>
+</div>
+<script>
+        // Fetch user ID if available (GET request)
+        fetch('/user_login')
+        .then(response => response.json())
+        .then(data => {
+            const content = document.getElementById('content');
+
+            content.innerHTML = `
+                <h1>User Login</h1>
+                <p>${data.message}</p>
+                ${data.user_id ? `<p>Your User ID is: <strong>${data.user_id}</strong></p>` : ''}
+                <h1>Enter Your Phone Number</h1>
+                <div id="phone-number-container">
+                    ${'<input type="text" class="digit-box" maxlength="1" oninput="moveToNext(this, event)">'.repeat(10)}
+                </div>
+                <h1>Select Your Gender</h1>
+                <div class="gender-selection">
+                    <div class="gender-option">
+                        <input type="radio" id="female" name="gender" value="female">
+                        <label for="female">Female</label>
+                    </div>
+                    <div class="gender-option">
+                        <input type="radio" id="male" name="gender" value="male">
+                        <label for="male">Male</label>
+                    </div>
+                </div>
+                <div class="instructions">Input your phone number and select your gender to login.</div>
+                <div class="button-container">
+                    <button onclick="submitInput()">Next</button>
+                </div>
+                <div class="message success" id="success-message"></div>
+                <div class="message error" id="error-message"></div>
+            `;
+        })
+        .catch(error => console.error('Error:', error));
+
+    function submitInput() {
+        const phoneNumber = Array.from(document.querySelectorAll('.digit-box')).map(d => d.value).join('');
+        const gender = document.querySelector('input[name="gender"]:checked')?.value;
+
+        if (phoneNumber.length === 10 && gender) {
+            fetch('/user_login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone_number: phoneNumber, gender: gender })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    displayMessage('success-message', data.message);
+                    localStorage.setItem('user_id', data.user_id);
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 2000);
+                } else {
+                    displayMessage('error-message', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayMessage('error-message', 'Failed to login. Please try again.');
+            });
+        } else {
+            displayMessage('error-message', 'Please enter a 10-digit phone number and select a gender.');
+        }
+    }
+
+    function displayMessage(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.style.display = 'block';
+        setTimeout(() => {
+            element.style.display = 'none';
+        }, 3000);
+    }
+
+    function moveToNext(current, event) {
+        if (event.inputType === "insertText" && current.value.length === current.maxLength) {
+            let next = current.nextElementSibling;
+            if (next && next.classList.contains('digit-box')) next.focus();
+        }
+    }
+
+</script>
+</body>
+</html>
