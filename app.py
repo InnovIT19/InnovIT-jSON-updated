@@ -453,6 +453,153 @@ def outfit():
         print(f"Error in /outfit route: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+# Define constraints
+skin_tones = [ 'black', 'dark brown' , 'brown' , 'olive' , 'white']
+colors = ['bright white',  'ruby red',  'bright purple',  'cobalt blue',  'royal blue',  'tomato red',  'denim blue',
+          'citrine',  'olive green',  'peach', 'copper', 'russet', 'pumpkin orange', 'taupe', 'silver', 'plum', 'maroon', 'forest green',
+          'black', 'mauve', 'pastel lilac', 'amber', 'emerald green', 'burnt orange', 'carmine', 'bordeaux', 'burgundy', 'fuchsia',
+          'blush pink', 'sapphire blue', 'coral', 'jade', 'black', 'charcoal', 'mahogany', 'royal blue', 'emerald green', 'silver',
+          'forest green', 'champagne', 'seafoam green', 'black', 'periwinkle', 'olive green', 'peach', 'teal', 'rose', 'soft pink', 'crimson',
+          'light grey']
+learning_rate = 0.1
+discount_factor = 0.9
+exploration_rate = 1.0
+min_exploration_rate = 0.01
+exploration_decay = 0.01
+
+# Survey data (Example: Ratings 1-5 for each color per skin tone)
+survey_ratings = {
+    'brown': [3,	5,	5,	2,	4,	1,	4,	4,	4,	5,
+              4,	2,	3,	2,	3,	3,	2,	2,	2,	3,
+              4,	5,	3,	2,	2,	2,	3,	3,	4,	3,
+              5,	4,	5,	3,	3,	5,	5,	4,	5,	5,
+              3,	3,	4,	4,	3,	4,	5,	5,	1,	5,
+              3,	4,	5,	3,	4,	4,	1,	5,	3,	3,
+              2,	2,	5,	4,	5,	4,	5,	2,	3,	3,
+              1,	4,	5,	2,	3,	2,	4,	3,	2,	3,
+              4,	3,	2,	5,	3,	4,	3,	5,	1,	3,
+              2,	5,	5,	3,	3,	1,	1,	3,	5,	2,
+              2,	3,	2,	3,	2,	3,	4,	4,	2,	4,
+              5,	3,	3,	2,	5,	4,	4,	5,	4,	3,
+              3,	4,	3,	3,	5,	5,	5,	3,	5,	3,
+              5,	5,	5,	4,	4,	5,	3,	4,	3,	3,
+              5,	2,	3,	4,	5,	2,	3,	3,	4,	4,
+              3,	4,	4,	3,	5,	3,	4 ],
+    'dark brown': [5,	5,	5,	4,	5,	2,	4,	3,	4,	5,
+                   5, 3,	1,	4,	5,	3,	2,	3,	1,	3,
+                   3,	4,  3,	4,	5,	4,	5,	5,	5,	5,
+                   5,	3,	4,  5,	5,	5,	5,	4,	5,	5,
+                   5,	3,	3,	3,  2,	2,	3,	3,	5,	2,
+                   2,	5,	5,	5,	5,  3,	3,	4,	3,	3,
+                   4,	1,	4,	3,	4,	2,  2,	2,	4,	3,
+                   4,	2,	3,	4,	2,	3,	3,  1,	5,	3,
+                   3,	1,	3,	2,	4,	3,	2,	2,  3,	1,
+                   4,	5,	4,	4,	5,	3,	3,	3,	2,  3,
+                   3,	2,	2,	4,	3,	2,	1,	5,	5,	3,
+                   4,	2,	5,	2,	3,	4,	1,	2,	3,	4,
+                   5, 5,	3,	3,	4,	2,	2,	4,	4,	5,
+                   3,	3,  3,	4,	4,	3,	5,	4,	4,	4,
+                   3,	4,	4,  3,	4,	2,	5,	3,	3,	5,
+                   4,	5,	5,	3,  2,	1],
+    'olive': [4,	5,	4,	3,	2,	1,	4,	3,	5,	5,
+              4,	3,	2,	2,	3,	3,	4,	4,	4,	5,
+              3,	4,	4,	4,	5,	4,	5,	4,	4,	4,
+              5,	5,	3,	5,	5,	5,	3,	2,	2,	3,
+              4,	5,	4,	5,	5,	4,	3,	4,	5,	5,
+              4,	5,	4,	5,	5,	2,	5,	5,	5,	5,
+              5,	3,	5,	1,	3,	2,	4,	4,	4,	2,
+              4,	5,	4,	3,	5,	5,	3,	3,	5,	2,
+              3,	5,	5,	5,	3,	4,	4,	5,	3,	5,
+              4,	4,	2,	3,	5,	4,	3,	2,	4,	5,
+              2,	4,	4,	4,	3,	1,	5,	5,	4,	4,
+              3,	1,	4,	5,	4,	5,	3,	5,	1,	5,
+              5,	2,	5,	2,	1,	3,	5,	4,	4,	5,
+              5,	5,	3,	3,	4,	3,	4,	4,	4,	5,
+              5,	3,	5,	2,	4,	4,	4,	4,	5,	2,
+              5,	3 ],
+    'black': [3,	5,	4,	3,	5,	5,	4,	2,	3,	5,
+              5,	3,	5,	2,	5,	3,  4,	3,	2,	3,
+              1,	2,	3,	2,	1,	1,	3,	2,	3,	1,
+              3,	2,  2,	5,	5,	5,	5,	5,	4,	5,
+              5,	4,	3,	4,	5,	4,	3,	2,  3,	3,
+              1,	2,	3,	3,	3,	2,	5,	5,	2,	3,
+              3,	2,	5,	4,  1,	3,	3,	3,	2,	2,
+              2,	1,	1,	3,	5,	5,	3,	3,	3,	3,
+              2,	2,	4,	5,	3,	4,	3,	1,	3,	2,
+              2,	1,	5,	2,	5,	3,  2,	4,	3,	2,
+              3,	4,	2,	2,	3,	3,	5,	4,	3,	2,
+              4,	2,  3,	3,	5,	3,	4,	4,	3,	5,
+              1,	1,	3,	2,	3,	1,	3,	5,  5,	5,
+              4,	5,	5,	5,	4,	1,	4,	1,	5,	5,
+              2,	5,	5,	1,  2,	2,	3,	4,	4,	1,
+              3,	2,	5,	5,	4,	4	],
+    'white': [5,	5,	3,	5,	3,	5,	4,	4,	5,	5,
+              4,	3,	3,	4,	4,	2,	4,	5,	5,	4,
+              2,	4,	5,	5,	4,	5,	5,	4,	4,	5,
+              5,	5,	5,	4,	4,	5,	3,	3,	4,	4,
+              4,	4,	4,	5,	4,	5,	4,	5,	5,	5,
+              5,	2,	5,	5,	5,	5,	4,	5,	5,	5,
+              5,	2,	4,	5,	5,	3,	2,	1,	5,	5,
+              5,	5,	4,	5,	5,	4,	5,	1,	5,	3,
+              4,	5,	4,	5,	5,	4,	5,	5,	5,	5,
+              4,	4,	4,	1,	5,	5,	4,	5,	5,	5,
+              3,	1,	5,	5,	5,	5,	4,	3,	3,	5,
+              5,	5,	4,	5,	4,	5,	3,	5,	3,	4,
+              5,	3,	5,	5,	4,	5,	3,	2,	4,	5,
+              4,	5,	2,	5,	4,	5,	5,	4,	5,	5,
+              5,	5,	5,	4,	5,	1,	4,	5,	4,	4,
+              5,	3,	3,	3,	4,	1 ]
+}
+
+# Convert ratings to rewards (1-5 rating scale to -2 to +2)
+def normalize_rating(rating):
+    return rating - 3  # Convert 1-5 ratings to -2 to +2
+
+# Initialize Q-table with zeros
+q_table = np.zeros((len(skin_tones), len(colors)))
+
+# Pre-train Q-table using survey data
+for skin_tone_index, skin_tone in enumerate(skin_tones):
+    for color_index, rating in enumerate(survey_ratings[skin_tone]):
+        reward = normalize_rating(rating)
+        q_value = q_table[skin_tone_index, color_index]
+
+        # Update Q-table based on survey data (initial pre-training)
+        q_table[skin_tone_index, color_index] = q_value + learning_rate * reward
+
+print("Q-table after pre-training with survey data:")
+print(q_table)
+
+
+# Helper function to fetch feedback from database
+def fetch_latest_feedback():
+    query = "SELECT skin_tone, color, size, outfit, overall FROM Feedback WHERE rating IS NOT NULL"
+    cursor.execute(query)
+    feedback_data = cursor.fetchall()
+    return feedback_data
+
+# Normalize feedback rating
+def normalize_rating(rating):
+    return rating - 3  # Convert 1-5 ratings to -2 to +2
+
+# Function to process feedback and update Q-table
+def process_feedback_and_update_qtable():
+    feedback_data = fetch_latest_feedback()
+    
+    for feedback in feedback_data:
+        skin_tone, color_rating, size_rating, outfit_rating, overall_rating = feedback
+        reward = sum([normalize_rating(r) for r in [color_rating, size_rating, outfit_rating, overall_rating]]) / 4
+        
+        skin_tone_index = skin_tones.index(skin_tone)
+        color_index = colors.index('example_color')  # Update with actual color logic
+
+        q_value = q_table[skin_tone_index, color_index]
+        best_future_q = np.max(q_table[skin_tone_index])
+        q_table[skin_tone_index, color_index] = q_value + learning_rate * (reward + discount_factor * best_future_q - q_value)
+
+
+
+
 
 @app.route('/outfits')
 def get_outfits():
@@ -484,32 +631,26 @@ def submit():
     # Add your logic here for handling the POST request to /submit
     return jsonify({'message': 'Submit endpoint reached successfully'}), 200
 
-@app.route('/feedback', methods=['GET', 'POST'])
-def submitFeedback():
-    if request.method == 'POST':
-        try:
-            data = request.json
-            color = data.get('color')
-            size = data.get('size')
-            outfit = data.get('outfit')
-            overall_appearance = data.get('overall_appearance')
-
-            conn = pyodbc.connect(connection_string)
-            cursor = conn.cursor()
-
-            cursor.execute("INSERT INTO feedback (color, size, outfit, overall_appearance) VALUES (?, ?, ?, ?)",
-                           (color, size, outfit, overall_appearance))
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-
-            return jsonify({'message': 'Feedback submitted successfully'}), 200
-
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-    return render_template('feedback.html')
+@app.route('/submit_feedback', methods=['POST'])
+def submit_feedback():
+    data = request.json
+    skin_tone = data.get('skin_tone')
+    color_rating = data.get('color_rating')
+    size_rating = data.get('size_rating')
+    outfit_rating = data.get('outfit_rating')
+    overall_rating = data.get('overall_rating')
+    
+    insert_query = """
+    INSERT INTO Feedback (skin_tone, color, size, outfit, overall)
+    VALUES (?, ?, ?, ?, ?)
+    """
+    cursor.execute(insert_query, skin_tone, color_rating, size_rating, outfit_rating, overall_rating)
+    conn.commit()
+    
+    # Update Q-table with feedback data
+    process_feedback_and_update_qtable()
+    
+    return jsonify({"message": "Feedback submitted and Q-table updated successfully!"})
 
 @app.route('/thank', methods=['GET'])
 def thank():
